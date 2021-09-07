@@ -6,45 +6,65 @@ import br.com.anderson.costa.desafio.repository.ProductRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import javax.persistence.EntityNotFoundException;
+import javax.transaction.Transactional;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
 public class ProductService {
 
-    @Autowired
-    private ProductRepository repository;
+    private final ProductRepository repository;
 
-    public List<ProductDTO> getAll() {
+    @Autowired
+    public ProductService(ProductRepository repository) {
+        this.repository = repository;
+    }
+
+    public List<ProductDTO> getAllProducts() {
         final List<Product> products = repository.findAll();
         return products.stream().map(ProductDTO::new).collect(Collectors.toList());
     }
 
-    public ProductDTO getProductById(String id) {
-        try {
-            final Product product = repository.getById(Integer.parseInt(id));
-            return new ProductDTO(product);
-        } catch (EntityNotFoundException e) {
-            e.printStackTrace();
-        }
-        return null;
+    public Optional<Product> getProductById(String id) {
+        return repository.findById(Integer.parseInt(id));
     }
 
-    public ProductDTO createOrUpdateProduct(ProductDTO productDTO) {
+    @Transactional
+    public ProductDTO createOrUpdateProduct(ProductDTO productDTO, String id) {
         Product product = new Product(productDTO);
         Product productSave;
-        if(productDTO.getId() == null) {
+        if (id == null) {
             productSave = repository.save(product);
-             productDTO.setId(String.valueOf(productSave.getId()));
-        } else if(!productDTO.getId().isEmpty()) {
-            Product productUpdate = repository.getById(Integer.valueOf(productDTO.getId()));
-            productUpdate.setName(productDTO.getName());
-            productUpdate.setDescription(productDTO.getDescription());
-            productUpdate.setPrice(productDTO.getPrice());
+            productDTO.setId(String.valueOf(productSave.getId()));
+        } else {
+            Optional<Product> productUpdate = getProductById(id);
 
-            repository.save(productUpdate);
+            if (productUpdate.isPresent()) {
+                productUpdate.get().setName(productDTO.getName());
+                productUpdate.get().setDescription(productDTO.getDescription());
+                productUpdate.get().setPrice(productDTO.getPrice());
+
+                productDTO.setId(id);
+            } else {
+                return null;
+            }
+
         }
         return productDTO;
+    }
+
+    @Transactional
+    public boolean removeProduct(String id) {
+        Optional<Product> productDTO = getProductById(id);
+        if (productDTO.isPresent()) {
+            repository.delete(productDTO.get());
+            return true;
+        }
+        return false;
+    }
+
+    public List<Product> findByPriceBetweenName(double minPrice, double maxPrice, String q) {
+        return repository.findPriceBetweenNameEquals(minPrice, maxPrice, q);
     }
 }

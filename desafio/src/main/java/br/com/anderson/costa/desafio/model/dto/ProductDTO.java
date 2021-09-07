@@ -5,14 +5,23 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import javax.validation.constraints.Min;
+import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.NotNull;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class ProductDTO {
 
     private String id;
+    @NotNull(message = "The value should not be null")
+    @NotEmpty(message = "The value should not be empty")
     private String name;
+    @NotNull(message = "The value should not be null")
+    @NotEmpty(message = "The value should not be empty")
     private String description;
+    @Min(value = 0L, message = "The value must be positive")
     private double price;
 
     public ProductDTO(Product product) {

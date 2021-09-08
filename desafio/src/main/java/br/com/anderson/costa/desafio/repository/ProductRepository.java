@@ -9,6 +9,14 @@ import java.util.List;
 
 public interface ProductRepository extends JpaRepository<Product, Integer> {
 
+    List<Product> findByPriceLessThanEqual(double maxPrice);
+
+    List<Product> findByPriceGreaterThanEqual(double minPrice);
+
+    List<Product> findByPriceBetween(double minPrice, double maxPrice);
+
+    List<Product> findByNameContains(String q);
+
     @Query("SELECT p FROM Product p WHERE (p.price >= :minPrice AND p.price <= :maxPrice) AND (p.name LIKE %:q% OR p.description LIKE %:q%)")
     List<Product> findPriceBetweenNameEquals(@Param("minPrice") double minPrice, @Param("maxPrice") double maxPrice, @Param("q") String q);
 }

@@ -7,14 +7,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import javax.validation.Valid;
+import java.net.URI;
 import java.util.List;
 import java.util.Optional;
 
 @RestController
 @RequestMapping("/products")
-public class ProductController {
+public class ProductController implements ProductsDocs {
 
     private final ProductService productService;
 
@@ -37,16 +39,20 @@ public class ProductController {
     }
 
     @GetMapping("/search")
-    public List<Product> listProductsWithFilter(@RequestParam double min_price, @RequestParam double max_price, @RequestParam String q) {
-        return productService.findByPriceBetweenName(min_price, max_price, q);
+    public ResponseEntity<List<ProductDTO>> listProductsWithFilter(@RequestParam(value = "min_price", required = false) String minPrice,
+                                                                   @RequestParam(value = "max_price", required = false) String maxPrice,
+                                                                   @RequestParam(value = "q", required = false) String q) {
+
+        return ResponseEntity.ok(productService.getResponseFilter(minPrice, maxPrice, q));
     }
 
     @PostMapping
-    public ResponseEntity<?> createProduct(@RequestBody @Valid ProductDTO productDTO) {
+    public ResponseEntity<?> createProduct(@RequestBody @Valid ProductDTO productDTO, UriComponentsBuilder uriBuilder) {
 
         final ProductDTO product = productService.createOrUpdateProduct(productDTO, null);
         if (product != null) {
-            return new ResponseEntity<>(product, HttpStatus.CREATED);
+            URI uri = uriBuilder.path("/products/{id}").buildAndExpand(product.getId()).toUri();
+            return ResponseEntity.created(uri).body(product);
         }
         return ResponseEntity.badRequest().body(null);
     }

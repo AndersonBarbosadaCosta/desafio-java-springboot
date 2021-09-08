@@ -21,9 +21,33 @@ public class ProductService {
         this.repository = repository;
     }
 
+    private List<ProductDTO> converterToProductDTO(List<Product> products) {
+        return products.stream().map(ProductDTO::new).collect(Collectors.toList());
+    }
+
     public List<ProductDTO> getAllProducts() {
         final List<Product> products = repository.findAll();
-        return products.stream().map(ProductDTO::new).collect(Collectors.toList());
+        return converterToProductDTO(products);
+    }
+
+    public List<ProductDTO> getProductsByMinPrice(String price) {
+        final List<Product> products = repository.findByPriceLessThanEqual(Double.parseDouble(price));
+        return converterToProductDTO(products);
+    }
+
+    public List<ProductDTO> getProductsByGreaterPrice(String price) {
+        final List<Product> products = repository.findByPriceGreaterThanEqual(Double.parseDouble(price));
+        return converterToProductDTO(products);
+    }
+
+    public List<ProductDTO> getProductsByMinAndGreaterPrice(String minPrice, String maxPrice) {
+        final List<Product> products = repository.findByPriceBetween(Double.parseDouble(minPrice), Double.parseDouble(maxPrice));
+        return converterToProductDTO(products);
+    }
+
+    public List<ProductDTO> getProductsByNameOrDescription(String q) {
+        final List<Product> products = repository.findByNameContains(q);
+        return converterToProductDTO(products);
     }
 
     public Optional<Product> getProductById(String id) {
@@ -64,7 +88,25 @@ public class ProductService {
         return false;
     }
 
-    public List<Product> findByPriceBetweenName(double minPrice, double maxPrice, String q) {
-        return repository.findPriceBetweenNameEquals(minPrice, maxPrice, q);
+    public List<ProductDTO> findByPriceBetweenName(String minPrice, String maxPrice, String q) {
+        List<Product> list = repository.findPriceBetweenNameEquals(Double.parseDouble(minPrice)
+                , Double.parseDouble(maxPrice), q);
+        return converterToProductDTO(list);
+    }
+
+    public List<ProductDTO> getResponseFilter(String minPrice, String maxPrice, String q) {
+        if (minPrice == null && maxPrice == null && q == null) {
+            return getAllProducts();
+        } else if (minPrice != null && maxPrice == null && q == null) {
+            return getProductsByMinPrice(minPrice);
+        } else if (maxPrice != null && minPrice == null && q == null) {
+            return getProductsByGreaterPrice(maxPrice);
+        } else if (minPrice != null && maxPrice != null && q == null) {
+            return getProductsByMinAndGreaterPrice(minPrice, maxPrice);
+        } else if (minPrice == null && maxPrice == null) {
+            return getProductsByNameOrDescription(q);
+        } else {
+            return findByPriceBetweenName(minPrice, maxPrice, q);
+        }
     }
 }

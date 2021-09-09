@@ -21,7 +21,7 @@ public class ProductService {
         this.repository = repository;
     }
 
-    private List<ProductDTO> converterToProductDTO(List<Product> products) {
+    public List<ProductDTO> converterToProductDTO(List<Product> products) {
         return products.stream().map(ProductDTO::new).collect(Collectors.toList());
     }
 
@@ -30,12 +30,12 @@ public class ProductService {
         return converterToProductDTO(products);
     }
 
-    public List<ProductDTO> getProductsByMinPrice(String price) {
+    public List<ProductDTO> getProductsPriceLessThan(String price) {
         final List<Product> products = repository.findByPriceLessThanEqual(Double.parseDouble(price));
         return converterToProductDTO(products);
     }
 
-    public List<ProductDTO> getProductsByGreaterPrice(String price) {
+    public List<ProductDTO> getProductsPriceGreaterThan(String price) {
         final List<Product> products = repository.findByPriceGreaterThanEqual(Double.parseDouble(price));
         return converterToProductDTO(products);
     }
@@ -98,9 +98,9 @@ public class ProductService {
         if (minPrice == null && maxPrice == null && q == null) {
             return getAllProducts();
         } else if (minPrice != null && maxPrice == null && q == null) {
-            return getProductsByMinPrice(minPrice);
+            return getProductsPriceLessThan(minPrice);
         } else if (maxPrice != null && minPrice == null && q == null) {
-            return getProductsByGreaterPrice(maxPrice);
+            return getProductsPriceGreaterThan(maxPrice);
         } else if (minPrice != null && maxPrice != null && q == null) {
             return getProductsByMinAndGreaterPrice(minPrice, maxPrice);
         } else if (minPrice == null && maxPrice == null) {

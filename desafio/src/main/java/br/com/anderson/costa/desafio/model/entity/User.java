@@ -1,5 +1,6 @@
 package br.com.anderson.costa.desafio.model.entity;
 
+import lombok.Data;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
@@ -9,6 +10,7 @@ import java.util.Collection;
 import java.util.List;
 
 @Entity
+@Data
 public class User implements UserDetails {
 
     private static final long serialVersionUID = 1L;
